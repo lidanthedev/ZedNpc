@@ -4,3 +4,5 @@ main: me.lidan.zednpc.ZedNpc
 api-version: '1.13'
 authors: [ LidanTheDev ]
 description: Removes the TosserUUID NBT tag from items when picked up.
+depend:
+  - ServersNPC
