@@ -1,13 +1,16 @@
 package me.lidan.zednpc.commands;
 
+import com.google.common.collect.Iterables;
 import io.github.gonalez.znpcs.ServersNPC;
 import io.github.gonalez.znpcs.configuration.Configuration;
 import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
 import io.github.gonalez.znpcs.configuration.ConfigurationValue;
 import io.github.gonalez.znpcs.npc.*;
 import io.github.gonalez.znpcs.skin.SkinFetcherResult;
+import io.github.gonalez.znpcs.user.ZUser;
 import io.github.gonalez.znpcs.utility.location.ZLocation;
 import io.netty.handler.codec.mqtt.MqttMessageBuilders;
+import lombok.extern.slf4j.Slf4j;
 import me.lidan.zednpc.ZedNpc;
 import me.lidan.zednpc.npc.ActionType;
 import me.lidan.zednpc.npc.NPCManager;
@@ -16,13 +19,17 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Nullable;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
+@Slf4j
 @Command({"zednpc", "zenpc", "npc", "znpc"})
 public class ZedNpcCommand {
     interface SkinFunction {
@@ -303,6 +310,69 @@ public class ZedNpcCommand {
         for (int i = 0; i < actions.size(); i++) {
             NPCAction action = actions.get(i);
             sender.sendMessage(i + ": " + action.getActionType() + " " + action.getAction());
+        }
+    }
+
+    @Subcommand("action cooldown")
+    @AutoComplete("@action-id *")
+    public void actionCooldown(Player sender, int index, int cooldown) {
+        int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
+        NPC npc = npcManager.getNpcById(id);
+        if (npc == null) {
+            sender.sendMessage(NPC_NOT_SELECTED);
+            return;
+        }
+        if (index < 0 || index >= npc.getNpcPojo().getClickActions().size()) {
+            sender.sendMessage("Invalid index");
+            return;
+        }
+        npc.getNpcPojo().getClickActions().get(index).setDelay(cooldown);
+        npc.changeType(npc.getNpcPojo().getNpcType());
+    }
+
+    @Subcommand("equip")
+    public void equip(Player sender, ItemSlot item) {
+        int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
+        NPC npc = npcManager.getNpcById(id);
+        if (npc == null) {
+            sender.sendMessage(NPC_NOT_SELECTED);
+            return;
+        }
+        ItemStack hand = sender.getInventory().getItemInMainHand();
+        npc.getNpcPojo().getNpcEquip().put(item, hand);
+        npc.getPackets().flushCache("equipPackets");
+        Set<ZUser> viewers = npc.getViewers();
+        viewers.forEach(npc::sendEquipPackets);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
+    }
+
+    @Subcommand("customize")
+    @AutoComplete("@customize-method @customize-method-args *")
+    public void customize(Player sender, String methodName, @Optional String value) {
+        int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
+        NPC npc = npcManager.getNpcById(id);
+        if (npc == null) {
+            sender.sendMessage(NPC_NOT_SELECTED);
+            return;
+        }
+        NPCType npcType = npc.getNpcPojo().getNpcType();
+        if (npcType.getCustomizationLoader().contains(methodName)) {
+            Method method = npcType.getCustomizationLoader().getMethods().get(methodName);
+            if (value == null) {
+                List<String> completionsForMethod = npcManager.getCompletionsForMethod(npcType, methodName);
+                sender.sendMessage("Possible values: " + String.join(", ", completionsForMethod));
+                return;
+            }
+            List<String> split = Arrays.asList(value.split(" "));
+            if (Iterables.size(split) < method.getParameterTypes().length) {
+                Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.TOO_FEW_ARGUMENTS);
+                return;
+            }
+
+            String[] values = Iterables.toArray(split, String.class);
+            npcType.updateCustomization(npc, methodName, values);
+            npc.getNpcPojo().getCustomizationMap().put(methodName, values);
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
         }
     }
 }

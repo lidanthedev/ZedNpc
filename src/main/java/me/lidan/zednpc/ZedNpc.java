@@ -1,6 +1,7 @@
 package me.lidan.zednpc;
 
 import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
+import io.github.gonalez.znpcs.npc.NPC;
 import io.github.gonalez.znpcs.npc.NPCType;
 import lombok.Getter;
 import lombok.NonNull;
@@ -15,6 +16,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,6 +53,23 @@ public final class ZedNpc extends JavaPlugin {
         commandHandler.getAutoCompleter().registerSuggestion("action-id", (args, sender, command) -> {
             Player player = Bukkit.getPlayer(sender.getName());
             return npcManager.getActionIndexes(npcManager.getSelectedNpcOf(player));
+        });
+        commandHandler.getAutoCompleter().registerSuggestion("customize-method", (args, sender, command) -> {
+            Player player = Bukkit.getPlayer(sender.getName());
+            NPC npc = npcManager.getSelectedNpcOf(player);
+            if (npc == null) {
+                return List.of();
+            }
+            return npc.getNpcPojo().getNpcType().getCustomizationLoader().getMethods().keySet();
+        });
+        commandHandler.getAutoCompleter().registerSuggestion("customize-method-args", (args, sender, command) -> {
+            Player player = Bukkit.getPlayer(sender.getName());
+            NPC npc = npcManager.getSelectedNpcOf(player);
+            if (npc == null) {
+                return List.of();
+            }
+            String methodName = args.get(0);
+            return npcManager.getCompletionsForMethod(npc.getNpcPojo().getNpcType(), methodName);
         });
         commandHandler.register(new ZedNpcCommand());
         commandHandler.registerBrigadier();
