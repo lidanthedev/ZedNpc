@@ -304,7 +304,5 @@ public class ZedNpcCommand {
             NPCAction action = actions.get(i);
             sender.sendMessage(i + ": " + action.getActionType() + " " + action.getAction());
         }
-        List<String> indexes = npcManager.getActionIndexes(npc);
-        sender.sendMessage("Indexes: " + indexes);
     }
 }
