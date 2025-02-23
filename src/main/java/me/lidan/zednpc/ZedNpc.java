@@ -1,8 +1,6 @@
 package me.lidan.zednpc;
 
 import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
-import io.github.gonalez.znpcs.npc.NPC;
-import io.github.gonalez.znpcs.npc.NPCModel;
 import io.github.gonalez.znpcs.npc.NPCType;
 import lombok.Getter;
 import lombok.NonNull;
@@ -12,14 +10,11 @@ import me.lidan.zednpc.listeners.ZedNpcListener;
 import me.lidan.zednpc.npc.NPCManager;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +23,7 @@ public final class ZedNpc extends JavaPlugin {
 
     @Getter
     private static ZedNpc instance;
+    private NPCManager npcManager;
     private BukkitCommandHandler commandHandler;
     private BukkitAudiences adventure;
 
@@ -36,6 +32,8 @@ public final class ZedNpc extends JavaPlugin {
         // Plugin startup logic
         instance = this;
         adventure = BukkitAudiences.create(this);
+
+        npcManager = NPCManager.getInstance();
         registerCommands();
 
         registerEvent(new ZedNpcListener());
@@ -48,17 +46,23 @@ public final class ZedNpc extends JavaPlugin {
         commandHandler.getAutoCompleter().registerSuggestion("npc-id", (args, sender, command) -> ConfigurationConstants.NPC_LIST.stream().map(npcModel -> String.valueOf(npcModel.getId())).toList());
         commandHandler.getAutoCompleter().registerSuggestion("toggle-settings",(args, sender, command) -> List.of("glow", "holo", "mirror", "look"));
         commandHandler.getAutoCompleter().registerSuggestion("actions",(args, sender, command) -> List.of("cmd", "console", "chat", "message", "server"));
-        commandHandler.getAutoCompleter().registerSuggestion("action-id",(args, sender, command) -> {
-            NPCManager npcManager = NPCManager.getInstance();
-            return npcManager.getActionIndexes(npcManager.getSelectedNpcOf((CommandSender) sender));
-        });
-        commandHandler.getAutoCompleter().registerParameterSuggestions(OfflinePlayer.class, (args, sender, command) -> {
-            List<String> lll = Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
-            System.out.printf("SCAM YOU SPIGOT: %s%n", lll);
-            getLogger().info("llll: %s".formatted(lll));
-            return lll;
-        });
         commandHandler.getAutoCompleter().registerParameterSuggestions(NPCType.class, (list, commandActor, executableCommand) -> Arrays.stream(NPCType.values()).map(Enum::name).toList());
+        commandHandler.getAutoCompleter().registerSuggestion("action-id", (args, sender, command) -> {
+            Player player = Bukkit.getPlayer(sender.getName());
+            return npcManager.getActionIndexes(npcManager.getSelectedNpcOf(player));
+        });
+//        dynamicCompletions.registerCompletion("action-id", (args, sender, command) -> {
+//            List<String> completions = new ArrayList<>();
+//            Random rnd = new Random();
+//            for (int i = 0; i < rnd.nextInt(10); i++) {
+//                completions.add(String.valueOf(i));
+//                log.info("Adding completion: {}", i);
+//            }
+//            if (sender instanceof CommandSender commandSender){
+//                log.info("CommandSender: {}", commandSender.getName());
+//            }
+//            return completions;
+//        });
         commandHandler.register(new ZedNpcCommand());
         commandHandler.registerBrigadier();
     }

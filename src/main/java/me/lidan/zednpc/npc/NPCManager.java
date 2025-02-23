@@ -34,10 +34,11 @@ public class NPCManager {
         for (int i = 0; i < npc.getNpcPojo().getClickActions().size(); i++) {
             actions.add(String.valueOf(i));
         }
+        log.info("Actions: {}", actions);
         return actions;
     }
 
-    public NPC getSelectedNpcOf(CommandSender sender) {
+    public @Nullable NPC getSelectedNpcOf(CommandSender sender) {
         return getNpcById(selectedNPC.get(sender));
     }
 
