@@ -51,18 +51,6 @@ public final class ZedNpc extends JavaPlugin {
             Player player = Bukkit.getPlayer(sender.getName());
             return npcManager.getActionIndexes(npcManager.getSelectedNpcOf(player));
         });
-//        dynamicCompletions.registerCompletion("action-id", (args, sender, command) -> {
-//            List<String> completions = new ArrayList<>();
-//            Random rnd = new Random();
-//            for (int i = 0; i < rnd.nextInt(10); i++) {
-//                completions.add(String.valueOf(i));
-//                log.info("Adding completion: {}", i);
-//            }
-//            if (sender instanceof CommandSender commandSender){
-//                log.info("CommandSender: {}", commandSender.getName());
-//            }
-//            return completions;
-//        });
         commandHandler.register(new ZedNpcCommand());
         commandHandler.registerBrigadier();
     }
