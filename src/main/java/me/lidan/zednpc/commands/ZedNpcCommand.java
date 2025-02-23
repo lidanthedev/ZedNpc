@@ -276,18 +276,18 @@ public class ZedNpcCommand {
 
     @Subcommand("action remove")
     @AutoComplete("@action-id *")
-    public void actionRemove(Player sender, int scamdex) {
+    public void actionRemove(Player sender, int index) {
         int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
         NPC npc = npcManager.getNpcById(id);
         if (npc == null) {
             sender.sendMessage(NPC_NOT_SELECTED);
             return;
         }
-        if (scamdex < 0 || scamdex >= npc.getNpcPojo().getClickActions().size()) {
-            sender.sendMessage("Invalid scamdex");
+        if (index < 0 || index >= npc.getNpcPojo().getClickActions().size()) {
+            sender.sendMessage("Invalid index");
             return;
         }
-        npc.getNpcPojo().getClickActions().remove(scamdex);
+        npc.getNpcPojo().getClickActions().remove(index);
         npc.changeType(npc.getNpcPojo().getNpcType());
     }
 
