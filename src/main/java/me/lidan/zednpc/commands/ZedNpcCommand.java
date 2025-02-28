@@ -368,10 +368,12 @@ public class ZedNpcCommand {
                 Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.TOO_FEW_ARGUMENTS);
                 return;
             }
-
+            npc.changeType(npc.getNpcPojo().getNpcType());
             String[] values = Iterables.toArray(split, String.class);
-            npcType.updateCustomization(npc, methodName, values);
             npc.getNpcPojo().getCustomizationMap().put(methodName, values);
+            for (Map.Entry<String, String[]> entry : npc.getNpcPojo().getCustomizationMap().entrySet()) {
+                npcType.updateCustomization(npc, entry.getKey(), entry.getValue());
+            }
             Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
         }
     }
