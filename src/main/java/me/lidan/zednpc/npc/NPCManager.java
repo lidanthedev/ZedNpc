@@ -1,11 +1,17 @@
 package me.lidan.zednpc.npc;
 
+import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
 import io.github.gonalez.znpcs.npc.NPC;
+import io.github.gonalez.znpcs.npc.NPCModel;
 import io.github.gonalez.znpcs.npc.NPCType;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
@@ -14,6 +20,7 @@ import java.util.*;
 @Slf4j
 @Getter
 public class NPCManager {
+    public static final int MAX_RANGE = 5;
     private static NPCManager instance;
 
     private final Map<CommandSender, Integer> selectedNPC = new HashMap<>();
@@ -67,6 +74,25 @@ public class NPCManager {
         for (Map.Entry<String, String[]> entry : npc.getNpcPojo().getCustomizationMap().entrySet()) {
             npcType.updateCustomization(npc, entry.getKey(), entry.getValue());
         }
+    }
+
+    public NPCModel getTargetNpc(Player sender) {
+        Location location = sender.getEyeLocation();
+        org.bukkit.util.Vector vector = location.getDirection();
+        World world = location.getWorld();
+        if (world == null) return null;
+        for (int i = 0; i < MAX_RANGE; i++) {
+            Vector newVector = vector.clone().multiply(i);
+            Location newLocation = location.clone().add(newVector);
+            for (NPCModel npc: ConfigurationConstants.NPC_LIST){
+                Location npcLoc = npc.getLocation().bukkitLocation();
+                if (!world.equals(npcLoc.getWorld())) continue;
+                if (npcLoc.distance(newLocation) < 1) {
+                    return npc;
+                }
+            }
+        }
+        return null;
     }
 
     public static NPCManager getInstance() {

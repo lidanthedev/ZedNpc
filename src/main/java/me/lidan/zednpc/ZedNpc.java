@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.lidan.zednpc.commands.ZedNpcCommand;
-import me.lidan.zednpc.listeners.ZedNpcListener;
 import me.lidan.zednpc.npc.NPCManager;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.Bukkit;
@@ -18,8 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -41,8 +38,6 @@ public final class ZedNpc extends JavaPlugin {
 
         npcManager = NPCManager.getInstance();
         registerCommands();
-
-        registerEvent(new ZedNpcListener());
 
         getLogger().info("Loaded!");
     }

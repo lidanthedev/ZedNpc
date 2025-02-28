@@ -20,9 +20,12 @@ import me.lidan.zednpc.utils.MiniMessageUtils;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
 
@@ -34,6 +37,9 @@ import java.util.*;
 @Slf4j
 @Command({"zednpc", "zenpc", "npc", "znpc"})
 public class ZedNpcCommand {
+
+    public static final String NO_NPC_FOUND = "No NPC found";
+
     interface SkinFunction {
         void apply(CommandSender var1, NPC var2, String var3, SkinFetcherResult var4);
     }
@@ -85,15 +91,20 @@ public class ZedNpcCommand {
     @AutoComplete("@npc-id *")
     public void selectNPC(CommandSender sender, @Optional int id) {
         if (id == 0) {
-            if (!(sender instanceof Player)) {
+            if (!(sender instanceof Player player)) {
                 sender.sendMessage("You must specify an id");
-            } else {
-                sender.sendMessage(SELECT_NPC_MESSAGE);
-                npcManager.getIsSelecting().put(sender, true);
                 return;
             }
+            sender.sendMessage(SELECT_NPC_MESSAGE);
+            NPCModel targetNpc = npcManager.getTargetNpc(player);
+            if (targetNpc == null) {
+                sender.sendMessage(NO_NPC_FOUND);
+                return;
+            }
+            id = targetNpc.getId();
         }
-        if (ConfigurationConstants.NPC_LIST.stream().noneMatch(npcModel -> npcModel.getId() == id)) {
+        int finalId = id;
+        if (ConfigurationConstants.NPC_LIST.stream().noneMatch(npcModel -> npcModel.getId() == finalId)) {
             Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NPC_NOT_FOUND);
             return;
         }
