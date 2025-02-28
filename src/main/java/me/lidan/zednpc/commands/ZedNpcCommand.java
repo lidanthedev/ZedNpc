@@ -2,14 +2,16 @@ package me.lidan.zednpc.commands;
 
 import com.google.common.collect.Iterables;
 import io.github.gonalez.znpcs.ServersNPC;
+import io.github.gonalez.znpcs.commands.list.inventory.ConversationGUI;
 import io.github.gonalez.znpcs.configuration.Configuration;
 import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
 import io.github.gonalez.znpcs.configuration.ConfigurationValue;
 import io.github.gonalez.znpcs.npc.*;
+import io.github.gonalez.znpcs.npc.conversation.Conversation;
+import io.github.gonalez.znpcs.npc.conversation.ConversationModel;
 import io.github.gonalez.znpcs.skin.SkinFetcherResult;
 import io.github.gonalez.znpcs.user.ZUser;
 import io.github.gonalez.znpcs.utility.location.ZLocation;
-import io.netty.handler.codec.mqtt.MqttMessageBuilders;
 import lombok.extern.slf4j.Slf4j;
 import me.lidan.zednpc.ZedNpc;
 import me.lidan.zednpc.npc.ActionType;
@@ -17,16 +19,16 @@ import me.lidan.zednpc.npc.NPCManager;
 import me.lidan.zednpc.utils.MiniMessageUtils;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.Nullable;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
 
+import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.*;
 
 @Slf4j
@@ -56,6 +58,9 @@ public class ZedNpcCommand {
     public static final String NPC_INFO = "<green>- <id> <hologram-lines> (<world> <x> <y> <z>) <hover:show_text:'Click to select this npc'><click:run_command:'/zednpc select <id>'><blue><b>[SELECT]</click> </hover><hover:show_text:'<green>Click to teleport to this npc'><click:run_command:'/zednpc teleport <id>'><dark_green><b>[TELEPORT]</click></hover> <hover:show_text:'<red>Click to delete this npc'><click:suggest_command:'/zednpc delete <id>'><dark_red><b>[DELETE]</click></hover>";
     private final NPCManager npcManager = NPCManager.getInstance();
     private final BukkitAudiences adventure = ZedNpc.getInstance().adventure();
+
+    private final Path znpcsPluginFolder = ServersNPC.PLUGIN_FOLDER.toPath();
+    private final Path znpcsPathFolder = znpcsPluginFolder.resolve("paths");
 
     @Subcommand("create")
     public void createNPC(Player sender, String name, @Default("PLAYER") NPCType entityType) {
@@ -163,7 +168,7 @@ public class ZedNpcCommand {
             return;
         }
         npc.getNpcPojo().setLocation(new ZLocation(sender.getLocation()));
-        npc.changeType(npc.getNpcPojo().getNpcType());
+        npcManager.updateNpc(npc);
     }
 
     @Subcommand("type")
@@ -192,7 +197,7 @@ public class ZedNpcCommand {
         List<String> hologramLines = Arrays.asList(split);
         Collections.reverse(hologramLines);
         npc.getNpcPojo().setHologramLines(hologramLines);
-        npc.changeType(npc.getNpcPojo().getNpcType());
+        npcManager.updateNpc(npc);
     }
 
     @Subcommand("height")
@@ -204,7 +209,7 @@ public class ZedNpcCommand {
             return;
         }
         npc.getNpcPojo().setHologramHeight(height);
-        npc.changeType(npc.getNpcPojo().getNpcType());
+        npcManager.updateNpc(npc);
     }
 
     @Subcommand("toggle")
@@ -278,7 +283,7 @@ public class ZedNpcCommand {
             return;
         }
         npc.getNpcPojo().getClickActions().add(new NPCAction(action.name(), value));
-        npc.changeType(npc.getNpcPojo().getNpcType());
+        npcManager.updateNpc(npc);
     }
 
     @Subcommand("action remove")
@@ -295,7 +300,7 @@ public class ZedNpcCommand {
             return;
         }
         npc.getNpcPojo().getClickActions().remove(index);
-        npc.changeType(npc.getNpcPojo().getNpcType());
+        npcManager.updateNpc(npc);
     }
 
     @Subcommand("action list")
@@ -327,7 +332,7 @@ public class ZedNpcCommand {
             return;
         }
         npc.getNpcPojo().getClickActions().get(index).setDelay(cooldown);
-        npc.changeType(npc.getNpcPojo().getNpcType());
+        npcManager.updateNpc(npc);
     }
 
     @Subcommand("equip")
@@ -368,13 +373,147 @@ public class ZedNpcCommand {
                 Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.TOO_FEW_ARGUMENTS);
                 return;
             }
-            npc.changeType(npc.getNpcPojo().getNpcType());
             String[] values = Iterables.toArray(split, String.class);
             npc.getNpcPojo().getCustomizationMap().put(methodName, values);
-            for (Map.Entry<String, String[]> entry : npc.getNpcPojo().getCustomizationMap().entrySet()) {
-                npcType.updateCustomization(npc, entry.getKey(), entry.getValue());
-            }
+            npcManager.updateNpc(npc);
             Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
         }
+    }
+
+    @Subcommand("path create")
+    public void createPath(Player sender, String pathName) {
+        ZUser znpcUser = ZUser.find(Objects.requireNonNull(sender.getPlayer()));
+        if (pathName.length() < 3 || pathName.length() > 16) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.INVALID_NAME_LENGTH);
+            return;
+        }
+
+        if (NPCPath.AbstractTypeWriter.find(pathName) != null) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.PATH_FOUND);
+            return;
+        }
+
+        if (znpcUser.isHasPath()) {
+            sender.sendMessage(ChatColor.RED + "You already have a path creator active, to remove it use /zednpc path exit.");
+            return;
+        }
+
+        File file = znpcsPathFolder.resolve(pathName + ".path").toFile();
+        NPCPath.AbstractTypeWriter.forCreation(file, znpcUser, NPCPath.AbstractTypeWriter.TypeWriter.MOVEMENT);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.PATH_START);
+    }
+
+    @Subcommand("path exit")
+    public void exitPath(Player sender) {
+        ZUser znpcUser = ZUser.find(Objects.requireNonNull(sender.getPlayer()));
+        if (!znpcUser.isHasPath()) {
+            sender.sendMessage(ChatColor.RED + "You do not have a path creator active.");
+            return;
+        }
+        znpcUser.setHasPath(false);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.EXIT_PATH);
+    }
+
+    @Subcommand("path list")
+    public void listPaths(CommandSender sender) {
+        Audience audience = adventure.sender(sender);
+        audience.sendMessage(MiniMessageUtils.miniMessage("<dark_green>Path list:"));
+
+        if (NPCPath.AbstractTypeWriter.getPaths().isEmpty()) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NO_PATH_FOUND);
+        } else {
+            for (NPCPath.AbstractTypeWriter file : NPCPath.AbstractTypeWriter.getPaths()) {
+                audience.sendMessage(MiniMessageUtils.miniMessage("<green>- <path-name> <hover:show_text:'Click to apply this path to the selected NPC'><click:run_command:'/zednpc path set <path-name>'><blue><b>[SET]</click></hover>", Map.of("path-name", file.getName())));
+            }
+        }
+    }
+
+    @Subcommand("path set")
+    @AutoComplete("@path-name *")
+    public void setPath(Player sender, String pathName) {
+        int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
+        NPC npc = npcManager.getNpcById(id);
+        if (npc == null) {
+            sender.sendMessage(NPC_NOT_SELECTED);
+            return;
+        }
+        NPCPath.AbstractTypeWriter npcPath = NPCPath.AbstractTypeWriter.find(pathName);
+        if (pathName.equalsIgnoreCase("clear")){
+            npcPath = null;
+            npcManager.updateNpc(npc);
+        }
+        npc.setPath(npcPath);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
+    }
+
+    @Subcommand("conversation create")
+    public void createConversation(Player sender, String conversationName) {
+        if (Conversation.exists(conversationName)) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.CONVERSATION_FOUND);
+            return;
+        }
+
+        if (conversationName.length() < 3 || conversationName.length() > 16) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.INVALID_NAME_LENGTH);
+            return;
+        }
+
+        ConfigurationConstants.NPC_CONVERSATIONS.add(new Conversation(conversationName));
+        sender.sendMessage(ChatColor.GREEN + "Conversation has been created. Use /zednpc conversation gui to edit messages in the conversation.");
+    }
+
+    @Subcommand("conversation gui")
+    public void conversationGui(Player sender) {
+        sender.openInventory((new ConversationGUI(sender)).build());
+    }
+
+    @Subcommand("conversation list")
+    public void listConversations(CommandSender sender) {
+        Audience audience = adventure.sender(sender);
+        audience.sendMessage(MiniMessageUtils.miniMessage("<dark_green>Conversation list:"));
+
+        if (ConfigurationConstants.NPC_CONVERSATIONS.isEmpty()) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NO_CONVERSATION_FOUND);
+        } else {
+            for (Conversation conversation : ConfigurationConstants.NPC_CONVERSATIONS) {
+                audience.sendMessage(MiniMessageUtils.miniMessage("<green>- <conversation-name> <hover:show_text:'Click to edit this conversation'><click:run_command:'/zednpc conversation gui'><blue><b>[EDIT]</click></hover>", Map.of("conversation-name", conversation.getName())));
+            }
+        }
+    }
+
+    @Subcommand("conversation remove")
+    public void removeConversation(Player sender, String conversationName) {
+        if (!Conversation.exists(conversationName)) {
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NO_CONVERSATION_FOUND);
+            return;
+        }
+
+        ConfigurationConstants.NPC_CONVERSATIONS.remove(Conversation.forName(conversationName));
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
+    }
+
+    @Subcommand("conversation set")
+    @AutoComplete("@conversation-name @conversation-type *")
+    public void setConversation(Player sender, String conversationName, @Optional String type) {
+        int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
+        NPC npc = npcManager.getNpcById(id);
+        if (npc == null) {
+            sender.sendMessage(NPC_NOT_SELECTED);
+            return;
+        }
+
+        if (conversationName.equalsIgnoreCase("clear")){
+            npc.getNpcPojo().setConversation(null);
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
+            return;
+        }
+
+        if (!Conversation.exists(conversationName)) {
+            npc.getNpcPojo().setConversation(null);
+            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NO_CONVERSATION_FOUND);
+            return;
+        }
+        npc.getNpcPojo().setConversation(new ConversationModel(conversationName, type != null ? type : "CLICK"));
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
     }
 }

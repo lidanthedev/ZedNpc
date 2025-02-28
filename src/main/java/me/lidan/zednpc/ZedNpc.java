@@ -2,7 +2,9 @@ package me.lidan.zednpc;
 
 import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
 import io.github.gonalez.znpcs.npc.NPC;
+import io.github.gonalez.znpcs.npc.NPCPath;
 import io.github.gonalez.znpcs.npc.NPCType;
+import io.github.gonalez.znpcs.npc.conversation.Conversation;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 public final class ZedNpc extends JavaPlugin {
@@ -71,6 +74,11 @@ public final class ZedNpc extends JavaPlugin {
             String methodName = args.get(0);
             return npcManager.getCompletionsForMethod(npc.getNpcPojo().getNpcType(), methodName);
         });
+        commandHandler.getAutoCompleter().registerSuggestion("path-name", (args, sender, command) ->
+            Stream.concat(NPCPath.AbstractTypeWriter.getPaths().stream().map(NPCPath.AbstractTypeWriter::getName), Stream.of("clear")).toList()
+        );
+        commandHandler.getAutoCompleter().registerSuggestion("conversation-name", (args, sender, command) -> Stream.concat(ConfigurationConstants.NPC_CONVERSATIONS.stream().map(Conversation::getName), Stream.of("clear")).toList());
+        commandHandler.getAutoCompleter().registerSuggestion("conversation-type", (args, sender, command) -> List.of("CLICK", "RADIUS"));
         commandHandler.register(new ZedNpcCommand());
         commandHandler.registerBrigadier();
     }

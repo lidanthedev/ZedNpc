@@ -61,6 +61,14 @@ public class NPCManager {
         return list;
     }
 
+    public void updateNpc(NPC npc) {
+        NPCType npcType = npc.getNpcPojo().getNpcType();
+        npc.changeType(npcType);
+        for (Map.Entry<String, String[]> entry : npc.getNpcPojo().getCustomizationMap().entrySet()) {
+            npcType.updateCustomization(npc, entry.getKey(), entry.getValue());
+        }
+    }
+
     public static NPCManager getInstance() {
         if (instance == null) {
             instance = new NPCManager();
