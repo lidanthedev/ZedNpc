@@ -20,12 +20,9 @@ import me.lidan.zednpc.utils.MiniMessageUtils;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
 
@@ -58,7 +55,6 @@ public class ZedNpcCommand {
     });
 
     public static final String SELECTED_NPC_MESSAGE = "Selected NPC: %d";
-    public static final String SELECT_NPC_MESSAGE = "Click on the NPC you want to select";
     public static final String NPC_NOT_PLAYER = "NPC is not a player";
     public static final String NPC_NOT_SELECTED = "No NPC selected select one with /npc select <id>";
     public static final String NPC_INFO = "<green>- <id> <hologram-lines> (<world> <x> <y> <z>) <hover:show_text:'Click to select this npc'><click:run_command:'/zednpc select <id>'><blue><b>[SELECT]</click> </hover><hover:show_text:'<green>Click to teleport to this npc'><click:run_command:'/zednpc teleport <id>'><dark_green><b>[TELEPORT]</click></hover> <hover:show_text:'<red>Click to delete this npc'><click:suggest_command:'/zednpc delete <id>'><dark_red><b>[DELETE]</click></hover>";
@@ -95,7 +91,6 @@ public class ZedNpcCommand {
                 sender.sendMessage("You must specify an id");
                 return;
             }
-            sender.sendMessage(SELECT_NPC_MESSAGE);
             NPCModel targetNpc = npcManager.getTargetNpc(player);
             if (targetNpc == null) {
                 sender.sendMessage(NO_NPC_FOUND);
@@ -504,8 +499,8 @@ public class ZedNpcCommand {
     }
 
     @Subcommand("conversation set")
-    @AutoComplete("@conversation-name @conversation-type *")
-    public void setConversation(Player sender, String conversationName, @Optional String type) {
+    @AutoComplete("@conversation-name *")
+    public void setConversation(Player sender, String conversationName, @Optional ConversationModel.ConversationType type) {
         int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
         NPC npc = npcManager.getNpcById(id);
         if (npc == null) {
@@ -524,7 +519,7 @@ public class ZedNpcCommand {
             Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NO_CONVERSATION_FOUND);
             return;
         }
-        npc.getNpcPojo().setConversation(new ConversationModel(conversationName, type != null ? type : "CLICK"));
+        npc.getNpcPojo().setConversation(new ConversationModel(conversationName, type != null ? type.name() : ConversationModel.ConversationType.CLICK.name()));
         Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
     }
 }

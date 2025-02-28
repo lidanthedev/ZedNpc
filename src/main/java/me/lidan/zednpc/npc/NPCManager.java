@@ -87,7 +87,7 @@ public class NPCManager {
             for (NPCModel npc: ConfigurationConstants.NPC_LIST){
                 Location npcLoc = npc.getLocation().bukkitLocation();
                 if (!world.equals(npcLoc.getWorld())) continue;
-                if (npcLoc.distance(newLocation) < 1) {
+                if (npcLoc.distance(newLocation) < 2) {
                     return npc;
                 }
             }

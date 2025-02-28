@@ -73,7 +73,6 @@ public final class ZedNpc extends JavaPlugin {
             Stream.concat(NPCPath.AbstractTypeWriter.getPaths().stream().map(NPCPath.AbstractTypeWriter::getName), Stream.of("clear")).toList()
         );
         commandHandler.getAutoCompleter().registerSuggestion("conversation-name", (args, sender, command) -> Stream.concat(ConfigurationConstants.NPC_CONVERSATIONS.stream().map(Conversation::getName), Stream.of("clear")).toList());
-        commandHandler.getAutoCompleter().registerSuggestion("conversation-type", (args, sender, command) -> List.of("CLICK", "RADIUS"));
         commandHandler.register(new ZedNpcCommand());
         commandHandler.registerBrigadier();
     }
