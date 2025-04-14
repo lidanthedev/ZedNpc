@@ -1,6 +1,5 @@
 package me.lidan.zednpc.utils;
 
-import net.kyori.adventure.platform.bukkit.BukkitComponentSerializer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -9,9 +8,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -62,11 +58,13 @@ public class MiniMessageUtils {
                 .map(entry -> {
                     if (entry.getValue() instanceof Component) {
                         return Placeholder.component(entry.getKey(), (Component) entry.getValue());
-                    } else if (entry.getValue() instanceof String str && str.contains(String.valueOf(ChatColor.COLOR_CHAR))) {
-                        return Placeholder.component(entry.getKey(), LEGACY_SECTION.deserialize(str));
-                    } else {
-                        return Placeholder.parsed(entry.getKey(), entry.getValue().toString());
+                    } else if (entry.getValue() instanceof String) {
+                        String str = (String) entry.getValue();
+                        if (str.contains(String.valueOf(ChatColor.COLOR_CHAR)))
+                            return Placeholder.component(entry.getKey(), LEGACY_SECTION.deserialize(str));
                     }
+                    return Placeholder.parsed(entry.getKey(), entry.getValue().toString());
+
                 })
                 .toArray(TagResolver[]::new);
 

@@ -5,8 +5,7 @@ import io.github.gonalez.znpcs.npc.NPC;
 import io.github.gonalez.znpcs.npc.NPCModel;
 import io.github.gonalez.znpcs.npc.NPCType;
 import lombok.Getter;
-import lombok.Singular;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -16,8 +15,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
-@Slf4j
+@Log4j2
 @Getter
 public class NPCManager {
     public static final int MAX_RANGE = 5;
@@ -54,7 +54,7 @@ public class NPCManager {
         Class<?> clazz = method.getParameterTypes()[0];
         if (clazz.isEnum()){
             Object[] enumConstants = clazz.getEnumConstants();
-            list = Arrays.stream(enumConstants).map(Object::toString).toList();
+            list = Arrays.stream(enumConstants).map(Object::toString).collect(Collectors.toList());
         }
         else if (clazz.isPrimitive() && clazz.getName().equals("boolean")) {
             list = List.of("true", "false");

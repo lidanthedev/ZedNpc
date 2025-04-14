@@ -12,7 +12,8 @@ import io.github.gonalez.znpcs.npc.conversation.ConversationModel;
 import io.github.gonalez.znpcs.skin.SkinFetcherResult;
 import io.github.gonalez.znpcs.user.ZUser;
 import io.github.gonalez.znpcs.utility.location.ZLocation;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import me.lidan.zednpc.ZedNpc;
 import me.lidan.zednpc.npc.ActionType;
 import me.lidan.zednpc.npc.NPCManager;
@@ -31,7 +32,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
 
-@Slf4j
+@Log4j2
 @Command({"zednpc", "zenpc", "npc", "znpc"})
 public class ZedNpcCommand {
 
@@ -87,10 +88,11 @@ public class ZedNpcCommand {
     @AutoComplete("@npc-id *")
     public void selectNPC(CommandSender sender, @Optional int id) {
         if (id == 0) {
-            if (!(sender instanceof Player player)) {
+            if (!(sender instanceof Player)) {
                 sender.sendMessage("You must specify an id");
                 return;
             }
+            Player player = (Player) sender;
             NPCModel targetNpc = npcManager.getTargetNpc(player);
             if (targetNpc == null) {
                 sender.sendMessage(NO_NPC_FOUND);
@@ -104,7 +106,7 @@ public class ZedNpcCommand {
             return;
         }
         npcManager.getSelectedNPC().put(sender, id);
-        sender.sendMessage(SELECTED_NPC_MESSAGE.formatted(id));
+        sender.sendMessage(String.format(SELECTED_NPC_MESSAGE, id));
     }
 
     @Subcommand({"delete","del"})
