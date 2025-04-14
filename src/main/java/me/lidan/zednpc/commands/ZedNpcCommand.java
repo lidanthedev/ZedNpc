@@ -87,8 +87,8 @@ public class ZedNpcCommand {
 
     @Subcommand({"select","sel"})
     @AutoComplete("@npc-id *")
-    public void selectNPC(CommandSender sender, @Optional int id) {
-        if (id == 0) {
+    public void selectNPC(CommandSender sender, @Default("-1") int id) {
+        if (id == -1) {
             if (!(sender instanceof Player)) {
                 sender.sendMessage("You must specify an id");
                 return;
