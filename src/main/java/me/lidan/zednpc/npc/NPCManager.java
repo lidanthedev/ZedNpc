@@ -31,16 +31,14 @@ public class NPCManager {
     }
 
     public List<String> getActionIndexes(NPC npc) {
-        log.info("NPC: {}", npc);
         if (npc == null) {
-            log.info("NPC is null");
+            log.warn("NPC is null");
             return new ArrayList<>();
         }
         List<String> actions = new ArrayList<>();
         for (int i = 0; i < npc.getNpcPojo().getClickActions().size(); i++) {
             actions.add(String.valueOf(i));
         }
-        log.info("Actions: {}", actions);
         return actions;
     }
 

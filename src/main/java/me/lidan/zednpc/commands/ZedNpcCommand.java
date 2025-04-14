@@ -20,6 +20,7 @@ import me.lidan.zednpc.npc.NPCManager;
 import me.lidan.zednpc.utils.MiniMessageUtils;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -292,6 +293,7 @@ public class ZedNpcCommand {
         }
         npc.getNpcPojo().getClickActions().add(new NPCAction(action.name(), value));
         npcManager.updateNpc(npc);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
     }
 
     @Subcommand("action remove")
@@ -309,6 +311,7 @@ public class ZedNpcCommand {
         }
         npc.getNpcPojo().getClickActions().remove(index);
         npcManager.updateNpc(npc);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
     }
 
     @Subcommand("action list")
@@ -320,6 +323,10 @@ public class ZedNpcCommand {
             return;
         }
         List<NPCAction> actions = npc.getNpcPojo().getClickActions();
+        if (actions.isEmpty()) {
+            sender.sendMessage("No actions found");
+            return;
+        }
         for (int i = 0; i < actions.size(); i++) {
             NPCAction action = actions.get(i);
             sender.sendMessage(i + ": " + action.getActionType() + " " + action.getAction());
@@ -341,6 +348,7 @@ public class ZedNpcCommand {
         }
         npc.getNpcPojo().getClickActions().get(index).setDelay(cooldown);
         npcManager.updateNpc(npc);
+        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
     }
 
     @Subcommand("equip")
@@ -523,5 +531,64 @@ public class ZedNpcCommand {
         }
         npc.getNpcPojo().setConversation(new ConversationModel(conversationName, type != null ? type.name() : ConversationModel.ConversationType.CLICK.name()));
         Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
+    }
+
+    @Subcommand("help")
+    @DefaultFor(value = {"zednpc", "zenpc", "npc", "znpc"})
+    public void help(CommandSender sender) {
+        Audience audience = adventure.sender(sender);
+        audience.sendMessage(getHelpMessage(HelpCommandType.LINE, "", ""));
+        audience.sendMessage(getHelpMessage(HelpCommandType.TITLE, "ZedNPC", "ZedNPC help"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.LINE, "", ""));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc create <name> <type>", "Create a new NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc select <id>", "Select an NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc delete <id>", "Delete an NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc skin <skinName>", "Change the skin of the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc list", "List all NPCs"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc teleport <id>", "Teleport to an NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc move", "Move the selected NPC to your location"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc type <type>", "Change the type of the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc lines <lines>", "Change the hologram lines of the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc height <height>", "Change the hologram height of the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc toggle <toggle> [color]", "Toggle a setting on/off for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc holo", "Toggle hologram for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc glow <color>", "Toggle glow for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc mirror", "Toggle mirror for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc look", "Toggle look for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc action add <action> <value>", "Add an action to the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc action remove <index>", "Remove an action from the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc action list", "List all actions of the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc action cooldown <index> <cooldown>", "Set the cooldown of an action"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc equip <slot>", "Equip the selected NPC with the item in your hand"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc customize <method> [value]", "Customize the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc path create <name>", "Create a new path"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc path exit", "Exit the path creator"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc path list", "List all paths"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc path set <name>", "Set the path for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc conversation create <name>", "Create a new conversation"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc conversation gui", "Open the conversation GUI"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc conversation list", "List all conversations"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc conversation remove <name>", "Remove a conversation"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc conversation set <name> [type]", "Set the conversation for the selected NPC"));
+        audience.sendMessage(getHelpMessage(HelpCommandType.COMMAND, "/zednpc help", "Show this help message"));
+    }
+
+    private Component getHelpMessage(HelpCommandType type, String command, String description) {
+        String onlyCommand = command.split("<")[0];
+        if(onlyCommand.contains("["))
+            onlyCommand = onlyCommand.split("\\[")[0];
+        if(type == HelpCommandType.TITLE)
+            return MiniMessageUtils.miniMessageString("<color:#D3495B><b><title></b></color>", Map.of("title", command));
+        if (type == HelpCommandType.COMMAND)
+            return MiniMessageUtils.miniMessageString("<click:suggest_command:'<only_command>'><color:#E9724C><u><all_command></u></color></click> <color:#E0AF79><i>- <description></i></color>\n", Map.of("only_command", onlyCommand,"all_command",command,"description", description));
+        if(type == HelpCommandType.LINE)
+            return MiniMessageUtils.miniMessageString("<color:#c04253>-------------------------------------</color>");
+        return MiniMessageUtils.miniMessageString("<red>ERROR</red>");
+    }
+
+    public enum HelpCommandType {
+        LINE,
+        COMMAND,
+        TITLE
     }
 }
