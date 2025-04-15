@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class EditConversationGUI {
-    private static final Logger log = LogManager.getLogger(EditConversationGUI.class);
     private PaginatedGui gui;
     private Player player;
     private Conversation conversation;
@@ -49,7 +48,7 @@ public class EditConversationGUI {
                 conversation.getTexts().add(new ConversationKey(lines));
                 player.sendMessage(ChatColor.GREEN + "Text has been added.");
                 update();
-                gui.open(player);
+                open();
             });
         }));
         gui.setItem(5, 9, ItemBuilder.from(Material.ARROW).name(MiniMessageUtils.miniMessage("<blue>Next Page")).asGuiItem(event -> {
@@ -78,12 +77,11 @@ public class EditConversationGUI {
                                 player.sendMessage(ChatColor.GREEN + "Text has been edited.");
                             }).whenComplete((unused, throwable) -> {
                                 update();
-                                gui.open(player);
+                                open();
                             });
                         }
                         else if (event.getClick() == ClickType.RIGHT) {
-                            gui.close(player);
-                            player.sendMessage(ChatColor.GREEN + "Opening conversation actions GUI... still to be done");
+                            new ConversationActionsGUI(player, conversation, text).open();
                         }
                         else if (event.getClick() == ClickType.SHIFT_LEFT){
                             PromptUtils.promptForInt(player, "&e&lCHANGE POSITION &a>=0&c<=" + this.conversation.getTexts().size(), "&7Type the new position...").thenAccept(position -> {
@@ -95,7 +93,7 @@ public class EditConversationGUI {
                                 }
                             }).whenComplete((unused, throwable) -> {
                                 update();
-                                gui.open(player);
+                                open();
                             });
                         }
                         else if (event.getClick() == ClickType.SHIFT_RIGHT){
@@ -104,7 +102,7 @@ public class EditConversationGUI {
                                 player.sendMessage(ChatColor.GREEN + "Sound has been edited.");
                             }).whenComplete((unused, throwable) -> {
                                 update();
-                                gui.open(player);
+                                open();
                             });;
                         }
                         else if (event.getClick() == ClickType.MIDDLE){
@@ -117,14 +115,14 @@ public class EditConversationGUI {
                                 player.sendMessage(ChatColor.GREEN + "Delay has been edited.");
                             }).whenComplete((unused, throwable) -> {
                                 update();
-                                gui.open(player);
+                                open();
                             });;
                         }
                         else if (event.getClick() == ClickType.DROP){
                             this.conversation.getTexts().remove(text);
                             player.sendMessage(ChatColor.GREEN + "Text has been removed.");
                             update();
-                            gui.open(player);
+                            open();
                         }
                     });
             gui.addItem(item);

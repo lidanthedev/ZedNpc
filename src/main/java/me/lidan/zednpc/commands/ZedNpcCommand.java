@@ -487,7 +487,7 @@ public class ZedNpcCommand {
 
     @Subcommand("conversation gui")
     public void conversationGui(Player sender) {
-        sender.openInventory((new ConversationGUI(sender)).build());
+        new ConversationsGUI(sender).open();
     }
 
     @Subcommand("conversation list")
@@ -539,18 +539,6 @@ public class ZedNpcCommand {
         }
         npc.getNpcPojo().setConversation(new ConversationModel(conversationName, type != null ? type.name() : ConversationModel.ConversationType.CLICK.name()));
         Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
-    }
-
-    @Subcommand("test chat")
-    public void testChat(Player sender) {
-        PromptUtils.promptForString(sender, "&e&lADD LINE", "&7Type the new line...").thenAccept(result -> {
-            sender.sendMessage("You typed: " + result);
-        });
-    }
-
-    @Subcommand("test conversations")
-    public void testCov(Player sender) {
-        new ConversationsGUI(sender).open();
     }
 
     @Subcommand("help")
