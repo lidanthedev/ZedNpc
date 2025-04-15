@@ -36,6 +36,9 @@ jobs:
         mkdir -p libs
         curl -L --retry 3 --fail -o libs/znpcs-5.0.jar https://github.com/lidanthedev/ZedNpc/releases/download/v0.2.0-alpha/znpcs-5.0.jar
         file libs/znpcs-5.0.jar
+        echo "Verifying checksum..."
+        echo "C916714BCCF8AD42ACDA8529CFEF0B28714E880089D10C6CA9A3B20E0F4FAD86  libs/znpcs-5.0.jar" > znpcs.sha256
+        sha256sum -c znpcs.sha256
 
     - name: Set execute permissions
       run: chmod +x gradlew
