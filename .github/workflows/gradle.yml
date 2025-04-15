@@ -28,7 +28,7 @@ jobs:
       id: znpcs-cache
       with:
         path: libs
-        key: znpcs-jar-v1
+        key: znpcs-jar-v1.1
 
     - name: Download ZNPCs jar if not cached
       if: steps.znpcs-cache.outputs.cache-hit != 'true'
