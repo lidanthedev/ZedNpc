@@ -103,7 +103,7 @@ public class EditConversationGUI {
                             }).whenComplete((unused, throwable) -> {
                                 update();
                                 open();
-                            });;
+                            });
                         }
                         else if (event.getClick() == ClickType.MIDDLE){
                             PromptUtils.promptForInt(player, "&e&lEdit Delay", "&7Enter new delay for Conversation").thenAccept(res -> {
@@ -116,7 +116,7 @@ public class EditConversationGUI {
                             }).whenComplete((unused, throwable) -> {
                                 update();
                                 open();
-                            });;
+                            });
                         }
                         else if (event.getClick() == ClickType.DROP){
                             this.conversation.getTexts().remove(text);

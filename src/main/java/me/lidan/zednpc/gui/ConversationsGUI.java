@@ -38,7 +38,7 @@ public class ConversationsGUI {
     private void update() {
         gui.clearPageItems();
         gui.getFiller().fillBorder(ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).name(Component.empty()).asGuiItem());
-        gui.setItem(5, 5, ItemBuilder.from(Material.EMERALD_BLOCK).name(MiniMessageUtils.miniMessage("<green>New</green>")).asGuiItem(event -> {;
+        gui.setItem(5, 5, ItemBuilder.from(Material.EMERALD_BLOCK).name(MiniMessageUtils.miniMessage("<green>New</green>")).asGuiItem(event -> {
             gui.close(player);
             PromptUtils.promptForString(player, "&e&lNew Conversation", "&7Enter name for new Conversation").thenAccept(res -> {
                 createConversation(player, res);
