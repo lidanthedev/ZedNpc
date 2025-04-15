@@ -6,9 +6,10 @@ import io.github.gonalez.znpcs.configuration.ConfigurationValue;
 import io.github.gonalez.znpcs.npc.conversation.Conversation;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class ConversationService {
-    public static void createConversation(Player sender, String conversationName) {
+    public static void createConversation(Player sender, @NotNull String conversationName) {
         if (Conversation.exists(conversationName)) {
             Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.CONVERSATION_FOUND);
             return;
