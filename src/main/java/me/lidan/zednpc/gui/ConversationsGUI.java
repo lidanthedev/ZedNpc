@@ -9,6 +9,7 @@ import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
 import io.github.gonalez.znpcs.configuration.ConfigurationValue;
 import io.github.gonalez.znpcs.npc.conversation.Conversation;
 import io.github.gonalez.znpcs.npc.conversation.ConversationKey;
+import me.lidan.zednpc.npc.ConversationService;
 import me.lidan.zednpc.utils.MiniMessageUtils;
 import me.lidan.zednpc.utils.PromptUtils;
 import net.kyori.adventure.text.Component;
@@ -111,17 +112,6 @@ public class ConversationsGUI {
     }
 
     public void createConversation(Player sender, String conversationName) {
-        if (Conversation.exists(conversationName)) {
-            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.CONVERSATION_FOUND);
-            return;
-        }
-
-        if (conversationName.length() < 3 || conversationName.length() > 16) {
-            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.INVALID_NAME_LENGTH);
-            return;
-        }
-
-        ConfigurationConstants.NPC_CONVERSATIONS.add(new Conversation(conversationName));
-        sender.sendMessage(ChatColor.GREEN + "Conversation has been created. Use /zednpc conversation gui to edit messages in the conversation.");
+        ConversationService.createConversation(sender, conversationName);
     }
 }
