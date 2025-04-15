@@ -34,7 +34,7 @@ jobs:
       if: steps.znpcs-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p libs
-        curl -L -o libs/znpcs-5.0.jar https://github.com/lidanthedev/ZedNpc/releases/download/untagged-e58df9fb18517f9824bc/znpcs-5.0.jar
+        curl -L -o libs/znpcs-5.0.jar https://github.com/lidanthedev/ZedNpc/releases/download/untagged-2d31be395ba356bd89d0/znpcs-5.0.jar
 
     - name: Set execute permissions
       run: chmod +x gradlew
