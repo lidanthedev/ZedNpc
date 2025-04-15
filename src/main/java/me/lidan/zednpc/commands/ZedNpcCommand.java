@@ -117,7 +117,7 @@ public class ZedNpcCommand {
         sender.sendMessage(String.format(SELECTED_NPC_MESSAGE, id));
     }
 
-    @Subcommand({"delete","del"})
+    @Subcommand({"delete","del","remove"})
     @AutoComplete("@npc-id *")
     public void deleteNPC(Player sender, @Optional int id) {
         if (id == 0) {
