@@ -28,13 +28,14 @@ jobs:
       id: znpcs-cache
       with:
         path: libs
-        key: znpcs-jar-v1.1
+        key: znpcs-jar-v1.2
 
     - name: Download ZNPCs jar if not cached
       if: steps.znpcs-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p libs
-        curl -L -o libs/znpcs-5.0.jar https://github.com/lidanthedev/ZedNpc/releases/download/untagged-2d31be395ba356bd89d0/znpcs-5.0.jar
+        curl -L --retry 3 --fail -o libs/znpcs-5.0.jar https://github.com/lidanthedev/ZedNpc/releases/download/untagged-2d31be395ba356bd89d0/znpcs-5.0.jar
+        file libs/znpcs-5.0.jar
 
     - name: Set execute permissions
       run: chmod +x gradlew
