@@ -7,11 +7,13 @@ import dev.triumphteam.gui.guis.PaginatedGui;
 import io.github.gonalez.znpcs.npc.NPCAction;
 import io.github.gonalez.znpcs.npc.conversation.Conversation;
 import io.github.gonalez.znpcs.npc.conversation.ConversationKey;
+import io.github.gonalez.znpcs.utility.Utils;
+import me.clip.placeholderapi.PlaceholderAPI;
 import me.lidan.zednpc.ZedNpc;
 import me.lidan.zednpc.npc.ActionType;
 import me.lidan.zednpc.utils.MiniMessageUtils;
 import me.lidan.zednpc.utils.PromptUtils;
-import net.kyori.adventure.Adventure;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
@@ -19,9 +21,9 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -46,17 +48,8 @@ public class ConversationActionsGUI {
         gui.clearPageItems();
         gui.getFiller().fillBorder(ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).name(Component.empty()).asGuiItem());
         gui.setItem(5, 5, ItemBuilder.from(Material.EMERALD_BLOCK).name(MiniMessageUtils.miniMessage("<green>New</green>")).asGuiItem(event -> {
-            gui.close(player);
             // Add a new action to the conversation
-            createAction().thenAccept(npcAction -> {
-                conversationKey.getActions().add(npcAction);
-                player.sendMessage(ChatColor.GREEN + "Action has been added.");
-                update();
-                open();
-            }).exceptionally(e -> {
-                player.sendMessage(ChatColor.RED + "Failed to create action: " + e.getMessage());
-                return null;
-            });
+            handleActionOperation(null, ChatColor.GREEN + "Action has been added.");
         }));
         gui.setItem(5, 9, ItemBuilder.from(Material.ARROW).name(MiniMessageUtils.miniMessage("<blue>Next Page")).asGuiItem(event -> {
             if (!gui.next()) {
@@ -79,17 +72,7 @@ public class ConversationActionsGUI {
                     update();
                     gui.open(player);
                 } else if (event.getClick() == ClickType.LEFT) {
-                    gui.close(player);
-                    createAction().thenAccept(npcAction -> {
-                        conversationKey.getActions().remove(action);
-                        conversationKey.getActions().add(npcAction);
-                        player.sendMessage(ChatColor.GREEN + "Action has been edited.");
-                        update();
-                        open();
-                    }).exceptionally(e -> {
-                        player.sendMessage(ChatColor.RED + "Failed to create action: " + e.getMessage());
-                        return null;
-                    });
+                    handleActionOperation(action, ChatColor.GREEN + "Action has been edited.");
                 }
             });
 
@@ -97,18 +80,46 @@ public class ConversationActionsGUI {
         }
     }
 
+    private void handleActionOperation(@Nullable NPCAction oldAction, String successMessage) {
+        gui.close(player);
+        createAction().thenAccept(npcAction -> {
+            if (oldAction != null) {
+                conversationKey.getActions().remove(oldAction);
+            }
+            conversationKey.getActions().add(npcAction);
+            player.sendMessage(ChatColor.GREEN + successMessage);
+        }).exceptionally(e -> {
+            String message = e.getMessage();
+            // remove exception name from message
+            if (message != null && message.contains(":")) {
+                message = message.substring(message.indexOf(":") + 1).trim();
+            }
+            player.sendMessage(ChatColor.RED + "Failed to create action: " + message);
+            return null;
+        }).whenComplete((unused, throwable) -> {
+            update();
+            open();
+        });
+    }
+
     private CompletableFuture<NPCAction> createAction() {
         CompletableFuture<NPCAction> future = new CompletableFuture<>();
-        String actions = Arrays.stream(ActionType.values()).map(ActionType::name).collect(Collectors.toList()).toString();
-        actions = actions.substring(1, actions.length() - 1);
-        adventure.player(player).sendMessage(MiniMessageUtils.miniMessage("<green>Available Actions: <actions></green> <gold>Example: CMD warp pvp", Map.of("actions", actions)));
+        Audience audience = adventure.player(player);
+        ActionType.helpActions(audience);
         PromptUtils.promptForString(player, "&e&lNew Action", "&7Enter action for new Conversation").thenAccept(res -> {
             String[] parts = res.split(" ");
             if (parts.length < 2) {
                 future.completeExceptionally(new IllegalArgumentException("Invalid action"));
                 return;
             }
-            NPCAction action = new NPCAction(parts[0], String.join(" ", Arrays.copyOfRange(parts, 1, parts.length)));
+            String actionType = parts[0].toUpperCase();
+            try{
+                ActionType.valueOf(actionType);
+            } catch (IllegalArgumentException e) {
+                future.completeExceptionally(new IllegalArgumentException("Invalid action type"));
+                return;
+            }
+            NPCAction action = new NPCAction(actionType, String.join(" ", Arrays.copyOfRange(parts, 1, parts.length)));
             future.complete(action);
         });
         return future;

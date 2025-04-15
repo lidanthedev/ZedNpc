@@ -291,6 +291,14 @@ public class ZedNpcCommand {
         toggle(sender, "look", "");
     }
 
+    @Subcommand("action help")
+    @DefaultFor(value = {"zednpc action", "zenpc action", "npc action", "znpc action"})
+    public void actionHelp(CommandSender sender) {
+        Audience audience = adventure.sender(sender);
+        audience.sendMessage(getHelpMessage(HelpCommandType.TITLE, "ZedNPC Actions", "ZedNPC actions"));
+        ActionType.helpActions(audience);
+    }
+
     @Subcommand("action add")
     public void actionAdd(Player sender, ActionType action, String value) {
         int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);

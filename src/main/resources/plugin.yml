@@ -6,3 +6,5 @@ authors: [ LidanTheDev ]
 description: Removes the TosserUUID NBT tag from items when picked up.
 depend:
   - ServersNPC
+softdepend:
+  - PlaceholderAPI
