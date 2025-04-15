@@ -24,7 +24,7 @@ jobs:
         cache: 'gradle'
 
     - name: Cache ZNPCs jar
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: znpcs-cache
       with:
         path: libs
