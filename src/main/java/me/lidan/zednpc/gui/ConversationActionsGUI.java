@@ -115,18 +115,19 @@ public class ConversationActionsGUI {
     }
 
     public Material getMaterialForAction(String action) {
-        if (action.equalsIgnoreCase("cmd")) {
-            return Material.COMMAND_BLOCK;
-        } else if (action.equalsIgnoreCase("console")) {
-            return Material.COMMAND_BLOCK;
-        } else if (action.equalsIgnoreCase("chat")) {
-            return Material.PAPER;
-        } else if (action.equalsIgnoreCase("message")) {
-            return Material.PAPER;
-        } else if (action.equalsIgnoreCase("server")) {
-            return Material.END_PORTAL_FRAME;
+        switch (action.toLowerCase()) {
+            case "cmd":
+                return Material.COMMAND_BLOCK;
+            case "console":
+                return Material.REPEATING_COMMAND_BLOCK;
+            case "chat":
+            case "message":
+                return Material.PAPER;
+            case "server":
+                return Material.END_PORTAL_FRAME;
+            default:
+                return Material.BARRIER;
         }
-        return Material.BARRIER;
     }
 
     public void open() {
