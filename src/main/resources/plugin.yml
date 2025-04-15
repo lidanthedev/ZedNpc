@@ -1,5 +1,5 @@
 name: zedNpc
-version: '1.0'
+version: '${version}'
 main: me.lidan.zednpc.ZedNpc
 api-version: '1.13'
 authors: [ LidanTheDev ]
