@@ -51,6 +51,9 @@ ZedNPC is a Minecraft plugin designed to improve the user experience (UX) of the
 ### Help
 - `/zednpc help`: Display the help menu with all available commands.
 
+### Permissions
+- `zednpc.admin`: Access to all commands.
+
 ## Installation
 
 1. Download the plugin `.jar` file.

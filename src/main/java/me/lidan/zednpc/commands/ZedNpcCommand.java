@@ -33,6 +33,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
+import revxrsal.commands.bukkit.annotation.CommandPermission;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -42,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 @Log4j2
+@CommandPermission("zednpc.admin")
 @Command({"zednpc", "zenpc", "npc", "znpc"})
 public class ZedNpcCommand {
 

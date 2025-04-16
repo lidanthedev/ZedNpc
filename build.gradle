@@ -26,9 +26,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.Revxrsal.Lamp:common:3.2.1'
-    implementation 'com.github.Revxrsal.Lamp:brigadier:3.2.1'
-    implementation 'com.github.Revxrsal.Lamp:bukkit:3.2.1'
+    implementation 'com.github.Revxrsal.Lamp:common:3.3.6'
+    implementation 'com.github.Revxrsal.Lamp:brigadier:3.3.6'
+    implementation 'com.github.Revxrsal.Lamp:bukkit:3.3.6'
     compileOnly("io.netty:netty-all:4.1.77.Final")
     compileOnly("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
