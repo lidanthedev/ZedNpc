@@ -9,4 +9,4 @@ before_install:
   - sha256sum -c znpcs.sha256
 
 install:
-  - ./gradlew -x test build publishToMavenLocal
+  - ./gradlew publishToMavenLocal -x test
