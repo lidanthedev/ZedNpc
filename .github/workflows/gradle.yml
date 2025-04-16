@@ -35,7 +35,7 @@ jobs:
       run: |
         mkdir -p libs
         curl -L --retry 3 --fail -o libs/znpcs-5.1.jar https://github.com/lidanthedev/ZedNpc/releases/download/v0.2.0-alpha/znpcs-5.1.jar
-        file libs/znpcs-5.0.jar
+        file libs/znpcs-5.1.jar
         echo "Verifying checksum..."
         echo "7425964C20EF3C020A0B94F55E386C05BCAF827192299F17C241C4405DBFF7F9  libs/znpcs-5.1.jar" > znpcs.sha256
         sha256sum -c znpcs.sha256
