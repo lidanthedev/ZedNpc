@@ -72,7 +72,7 @@ ZedNPC is a Minecraft plugin designed to improve the user experience (UX) of the
 ### Build
 
 Put the original ZNPCs plugin in the `libs` folder.
-Can be found [here](https://www.spigotmc.org/resources/znpcs.80940/download?version=569796) or [here](https://github.com/lidanthedev/ZedNpc/releases/download/v0.2.0-alpha/znpcs-5.0.jar)
+Can be found [here](https://www.spigotmc.org/resources/znpcs.80940/download?version=569796) or [here](https://github.com/lidanthedev/ZedNpc/releases/tag/v0.2.0-alpha)
 
 This project uses Gradle for building. To build the plugin:
 

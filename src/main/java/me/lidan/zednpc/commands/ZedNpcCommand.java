@@ -1,20 +1,18 @@
 package me.lidan.zednpc.commands;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.github.gonalez.znpcs.ServersNPC;
-import io.github.gonalez.znpcs.commands.list.inventory.ConversationGUI;
 import io.github.gonalez.znpcs.configuration.Configuration;
 import io.github.gonalez.znpcs.configuration.ConfigurationConstants;
 import io.github.gonalez.znpcs.configuration.ConfigurationValue;
 import io.github.gonalez.znpcs.npc.*;
 import io.github.gonalez.znpcs.npc.conversation.Conversation;
 import io.github.gonalez.znpcs.npc.conversation.ConversationModel;
-import io.github.gonalez.znpcs.skin.SkinFetcherResult;
-import io.github.gonalez.znpcs.user.EventService;
+import io.github.gonalez.znpcs.skin.*;
 import io.github.gonalez.znpcs.user.ZUser;
-import io.github.gonalez.znpcs.utility.Utils;
+import io.github.gonalez.znpcs.utility.PlaceholderUtils;
 import io.github.gonalez.znpcs.utility.location.ZLocation;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 import me.lidan.zednpc.ZedNpc;
 import me.lidan.zednpc.gui.ConversationsGUI;
@@ -22,15 +20,14 @@ import me.lidan.zednpc.npc.ActionType;
 import me.lidan.zednpc.npc.ConversationService;
 import me.lidan.zednpc.npc.NPCManager;
 import me.lidan.zednpc.utils.MiniMessageUtils;
-import me.lidan.zednpc.utils.PromptUtils;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
@@ -39,8 +36,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 
 @Log4j2
 @CommandPermission("zednpc.admin")
@@ -48,23 +44,25 @@ import java.util.concurrent.Future;
 public class ZedNpcCommand {
 
     public static final String NO_NPC_FOUND = "No NPC found";
+    private final SkinFetcher skinFetcher = new SkinFetcher(Executors.newCachedThreadPool(), ImmutableList.of(new MineSkinFetch(), new MojangNameSkinFetch()));
 
-    interface SkinFunction {
-        void apply(CommandSender var1, NPC var2, String var3, SkinFetcherResult var4);
+    private void fetchSkin(final CommandSender commandSender, final NPC npc, final String name, @Nullable final SkinFetcher.SkinFetchListener listener) {
+        Configuration.MESSAGES.sendMessage(commandSender, ConfigurationValue.FETCHING_SKIN, name);
+        this.skinFetcher.fetchSkin(name, new SkinFetcher.SkinFetchListener() {
+            public void onSuccess(SkinFetcherServer server, SkinProperties skinProperties) {
+                npc.changeSkin(NPCSkin.forValues(skinProperties.getValue(), skinProperties.getSignature()));
+                commandSender.sendMessage(ChatColor.GREEN + "Skin data received from: " + ChatColor.WHITE + server.getName());
+                Configuration.MESSAGES.sendMessage(commandSender, ConfigurationValue.GET_SKIN);
+                if (listener != null) {
+                    listener.onSuccess(server, skinProperties);
+                }
+            }
+
+            public void onError(Throwable throwable) {
+                Configuration.MESSAGES.sendMessage(commandSender, ConfigurationValue.CANT_GET_SKIN, name);
+            }
+        });
     }
-
-    private static final SkinFunction DO_APPLY_SKIN = (commandSender, npc, skinName, result) -> NPCSkin.forName(skinName, (paramArrayOfString, throwable) -> {
-        if (throwable != null) {
-            Configuration.MESSAGES.sendMessage(commandSender, ConfigurationValue.CANT_GET_SKIN, skinName);
-        } else {
-            npc.changeSkin(NPCSkin.forValues(paramArrayOfString));
-            Configuration.MESSAGES.sendMessage(commandSender, ConfigurationValue.GET_SKIN, new Object[0]);
-        }
-
-        if (result != null) {
-            result.onDone(paramArrayOfString, throwable);
-        }
-    });
 
     public static final String SELECTED_NPC_MESSAGE = "Selected NPC: %d";
     public static final String NPC_NOT_PLAYER = "NPC is not a player";
@@ -89,8 +87,7 @@ public class ZedNpcCommand {
         NPC npc = ServersNPC.createNPC(id, entityType, sender.getLocation(), name);
         Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.SUCCESS);
         if (entityType == NPCType.PLAYER) {
-            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.FETCHING_SKIN, name);
-            DO_APPLY_SKIN.apply(sender, npc, name, null);
+            this.fetchSkin(sender, npc, name, null);
         }
         npcManager.getSelectedNPC().put(sender, id);
     }
@@ -136,7 +133,7 @@ public class ZedNpcCommand {
     }
 
     @Subcommand("skin")
-    public void skinNPC(Player sender, String skinName) {
+    public void skinNPC(Player sender, String skinName, @Optional Integer refreshSkinDuration) {
         int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
         NPC npc = npcManager.getNpcById(id);
         if (npc == null) {
@@ -147,8 +144,18 @@ public class ZedNpcCommand {
             sender.sendMessage(NPC_NOT_PLAYER);
             return;
         }
-        Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.FETCHING_SKIN, skinName);
-        DO_APPLY_SKIN.apply(sender, npc, skinName, null);
+        npc.getNpcPojo().setSkinName(skinName);
+        this.fetchSkin(sender, npc, PlaceholderUtils.formatPlaceholders(skinName), new SkinFetcher.SkinFetchListener(){
+            @Override
+            public void onSuccess(SkinFetcherServer server, SkinProperties skinProperties) {
+                if (refreshSkinDuration != null) {
+                    npc.getNpcPojo().setRefreshSkinDuration(refreshSkinDuration);
+                    sender.sendMessage(ChatColor.GREEN + "The skin will refresh every: " + ChatColor.YELLOW + refreshSkinDuration + ChatColor.GREEN + " seconds.");
+                } else {
+                    npc.getNpcPojo().setRefreshSkinDuration(0);
+                }
+            }
+        });
     }
 
     @Subcommand("list")
