@@ -1,6 +1,6 @@
 # ZedNPC Plugin
 
-ZedNPC is a Minecraft plugin designed to improve the user experience (UX) of the ZNPCs command system by providing a more intuitive and user-friendly interface, similar to the Citizens plugin. This plugin acts as a command wrapper for the ZNPCs system, simplifying interactions without extending its core functionality.
+ZedNPC is a Minecraft plugin designed to improve the user experience (UX) of the ZNPCs command system and GUI system by providing a more intuitive and user-friendly interface, similar to the Citizens plugin. This plugin acts as a command wrapper/addon for the ZNPCs system, simplifying interactions without extending its core functionality.
 
 ## Features
 
@@ -72,6 +72,7 @@ ZedNPC is a Minecraft plugin designed to improve the user experience (UX) of the
 ### Build
 
 Put the original ZNPCs plugin in the `libs` folder.
+Can be found [here](https://www.spigotmc.org/resources/znpcs.80940/download?version=569796) or [here](https://github.com/lidanthedev/ZedNpc/releases/download/v0.2.0-alpha/znpcs-5.0.jar)
 
 This project uses Gradle for building. To build the plugin:
 
@@ -84,4 +85,3 @@ Contributions are welcome! Feel free to open issues or submit pull requests to i
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-```

@@ -75,7 +75,8 @@ public final class ZedNpc extends JavaPlugin {
         commandHandler.getAutoCompleter().registerSuggestion("path-name", (args, sender, command) ->
             Stream.concat(NPCPath.AbstractTypeWriter.getPaths().stream().map(NPCPath.AbstractTypeWriter::getName), Stream.of("clear")).collect(Collectors.toList())
         );
-        commandHandler.getAutoCompleter().registerSuggestion("conversation-name", (args, sender, command) -> Stream.concat(ConfigurationConstants.NPC_CONVERSATIONS.stream().map(Conversation::getName), Stream.of("clear")).collect(Collectors.toList()));
+        commandHandler.getAutoCompleter().registerSuggestion("conversation-name", (args, sender, command) -> ConfigurationConstants.NPC_CONVERSATIONS.stream().map(Conversation::getName).collect(Collectors.toList()));
+        commandHandler.getAutoCompleter().registerSuggestion("conversation-name-with-clear", (args, sender, command) -> Stream.concat(ConfigurationConstants.NPC_CONVERSATIONS.stream().map(Conversation::getName), Stream.of("clear")).collect(Collectors.toList()));
         commandHandler.register(new ZedNpcCommand());
         commandHandler.registerBrigadier();
     }

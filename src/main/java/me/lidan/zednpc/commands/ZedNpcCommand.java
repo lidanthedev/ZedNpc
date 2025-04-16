@@ -10,20 +10,26 @@ import io.github.gonalez.znpcs.npc.*;
 import io.github.gonalez.znpcs.npc.conversation.Conversation;
 import io.github.gonalez.znpcs.npc.conversation.ConversationModel;
 import io.github.gonalez.znpcs.skin.SkinFetcherResult;
+import io.github.gonalez.znpcs.user.EventService;
 import io.github.gonalez.znpcs.user.ZUser;
+import io.github.gonalez.znpcs.utility.Utils;
 import io.github.gonalez.znpcs.utility.location.ZLocation;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 import me.lidan.zednpc.ZedNpc;
+import me.lidan.zednpc.gui.ConversationsGUI;
 import me.lidan.zednpc.npc.ActionType;
+import me.lidan.zednpc.npc.ConversationService;
 import me.lidan.zednpc.npc.NPCManager;
 import me.lidan.zednpc.utils.MiniMessageUtils;
+import me.lidan.zednpc.utils.PromptUtils;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
@@ -33,6 +39,8 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 @Log4j2
 @CommandPermission("zednpc.admin")
@@ -112,7 +120,7 @@ public class ZedNpcCommand {
         sender.sendMessage(String.format(SELECTED_NPC_MESSAGE, id));
     }
 
-    @Subcommand({"delete","del"})
+    @Subcommand({"delete","del","remove"})
     @AutoComplete("@npc-id *")
     public void deleteNPC(Player sender, @Optional int id) {
         if (id == 0) {
@@ -283,6 +291,14 @@ public class ZedNpcCommand {
             return;
         }
         toggle(sender, "look", "");
+    }
+
+    @Subcommand("action help")
+    @DefaultFor(value = {"zednpc action", "zenpc action", "npc action", "znpc action"})
+    public void actionHelp(CommandSender sender) {
+        Audience audience = adventure.sender(sender);
+        audience.sendMessage(getHelpMessage(HelpCommandType.TITLE, "ZedNPC Actions", "ZedNPC actions"));
+        ActionType.helpActions(audience);
     }
 
     @Subcommand("action add")
@@ -466,23 +482,12 @@ public class ZedNpcCommand {
 
     @Subcommand("conversation create")
     public void createConversation(Player sender, String conversationName) {
-        if (Conversation.exists(conversationName)) {
-            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.CONVERSATION_FOUND);
-            return;
-        }
-
-        if (conversationName.length() < 3 || conversationName.length() > 16) {
-            Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.INVALID_NAME_LENGTH);
-            return;
-        }
-
-        ConfigurationConstants.NPC_CONVERSATIONS.add(new Conversation(conversationName));
-        sender.sendMessage(ChatColor.GREEN + "Conversation has been created. Use /zednpc conversation gui to edit messages in the conversation.");
+        ConversationService.createConversation(sender, conversationName);
     }
 
     @Subcommand("conversation gui")
     public void conversationGui(Player sender) {
-        sender.openInventory((new ConversationGUI(sender)).build());
+        new ConversationsGUI(sender).open();
     }
 
     @Subcommand("conversation list")
@@ -500,6 +505,7 @@ public class ZedNpcCommand {
     }
 
     @Subcommand("conversation remove")
+    @AutoComplete("@conversation-name *")
     public void removeConversation(Player sender, String conversationName) {
         if (!Conversation.exists(conversationName)) {
             Configuration.MESSAGES.sendMessage(sender, ConfigurationValue.NO_CONVERSATION_FOUND);
@@ -511,7 +517,7 @@ public class ZedNpcCommand {
     }
 
     @Subcommand("conversation set")
-    @AutoComplete("@conversation-name *")
+    @AutoComplete("@conversation-name-with-clear *")
     public void setConversation(Player sender, String conversationName, @Optional ConversationModel.ConversationType type) {
         int id = npcManager.getSelectedNPC().getOrDefault(sender, 0);
         NPC npc = npcManager.getNpcById(id);
