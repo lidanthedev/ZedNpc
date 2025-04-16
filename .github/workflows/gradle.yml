@@ -28,16 +28,16 @@ jobs:
       id: znpcs-cache
       with:
         path: libs
-        key: znpcs-jar-v1.4
+        key: znpcs-jar-v5.1
 
     - name: Download ZNPCs jar if not cached
       if: steps.znpcs-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p libs
-        curl -L --retry 3 --fail -o libs/znpcs-5.0.jar https://github.com/lidanthedev/ZedNpc/releases/download/v0.2.0-alpha/znpcs-5.0.jar
+        curl -L --retry 3 --fail -o libs/znpcs-5.1.jar https://github.com/lidanthedev/ZedNpc/releases/download/v0.2.0-alpha/znpcs-5.1.jar
         file libs/znpcs-5.0.jar
         echo "Verifying checksum..."
-        echo "C916714BCCF8AD42ACDA8529CFEF0B28714E880089D10C6CA9A3B20E0F4FAD86  libs/znpcs-5.0.jar" > znpcs.sha256
+        echo "7425964C20EF3C020A0B94F55E386C05BCAF827192299F17C241C4405DBFF7F9  libs/znpcs-5.1.jar" > znpcs.sha256
         sha256sum -c znpcs.sha256
 
     - name: Set execute permissions
