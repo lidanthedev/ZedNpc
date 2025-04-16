@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import revxrsal.commands.annotation.*;
 import revxrsal.commands.annotation.Optional;
+import revxrsal.commands.bukkit.annotation.CommandPermission;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -34,6 +35,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 @Log4j2
+@CommandPermission("zednpc.admin")
 @Command({"zednpc", "zenpc", "npc", "znpc"})
 public class ZedNpcCommand {
 
