@@ -85,11 +85,12 @@ processResources {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        shadow(MavenPublication) {
+            from components.shadow
             groupId = project.group
             artifactId = 'zednpc'
             version = project.version
         }
     }
 }
+
